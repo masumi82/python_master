@@ -29,8 +29,10 @@ lint: venv
 type: venv
 	$(PY) -m mypy --config-file $(CONFIG) src test
 
+# -X dev と -W error で、閉じ忘れたファイルなどの警告をテストの失敗にする。
+# -X tracemalloc=5 は、その原因になったオブジェクトを「どこで作ったか」まで表示させる。
 check: lint type
-	PYTHONPATH=src $(PY) -X dev -m pytest -c $(CONFIG) -W error test $(ARGS)
+	PYTHONPATH=src $(PY) -X dev -X tracemalloc=5 -m pytest -c $(CONFIG) -W error test $(ARGS)
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache
