@@ -67,7 +67,7 @@ C で `fgets` のループの中に解析と絞り込みを全部書いていた
 - `"ERROR disk full".split(maxsplit=1)` と `"ERROR".split(maxsplit=1)` を対話環境で試す
 
 ## 発展課題（任意）
-- `take` を `itertools.islice` で、`chunked` を `itertools.batched` で書き直してみる。どちらも、そのままでは仕様と少し違う（`batched` はタプルを返し、`islice` は負の個数を受け付けない）。何を足せばテストが通るか
+- `take` を `itertools.islice` で、`chunked` を `itertools.batched` で書き直してみる。どちらも、そのままでは仕様と少し違う（`batched` はタプルを返し、`islice` は負の個数を受け付けない）。何を足せば `make check` まで通るか
 - `first_errors` を、ジェネレータ式 `(r.message for r in ...)` を使って書き直す
 - `sum(x * x for x in range(10**7))` と `sum([x * x for x in range(10**7)])` で、メモリの使い方がどう違うか
 
