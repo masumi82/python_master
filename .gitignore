@@ -1,0 +1,16 @@
+# Python / tool caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+# secrets / local
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+config/local.*
+# misc
+node_modules/
