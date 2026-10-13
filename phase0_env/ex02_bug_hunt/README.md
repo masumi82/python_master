@@ -26,4 +26,4 @@
 - デフォルト引数の値は、いつ作られるか。なぜ「単独だと通る」のか
 - `int | None` を返す関数の戻り値を、mypy はなぜそのまま掛け算に使わせないのか。`if not idx:` と `if idx is None:` は何が違うか
 - ファイルを閉じ忘れると何が困るか。`make test` では見つからず、`make check` で見つかったのはなぜか
-- ruff、mypy、pytest、`python -X dev` は、それぞれどの種類のバグに強いか
+- ruff、mypy、pytest、警告のエラー扱い（`make check`）は、それぞれどの種類のバグに強いか

@@ -33,6 +33,10 @@ def test_buffers_do_not_share_storage() -> None:
     assert len(first) == 1
     assert len(second) == 0
     assert list(second) == []
+    # 2 つ目に入れても、1 つ目の中身は変わらない。
+    second.push("b")
+    assert list(first) == ["a"]
+    assert list(second) == ["b"]
 
 
 # --- push / pop ---

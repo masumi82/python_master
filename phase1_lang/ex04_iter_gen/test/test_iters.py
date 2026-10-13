@@ -22,10 +22,17 @@ class CountingLines:
         return line
 
 
+# 「終わりのない列」を読んでよい上限。これを超えて読んだら、テストを失敗させる。
+# 上限がないと、全部をリストにためる実装でテストが止まらず、メモリを使い切ってしまう。
+READ_LIMIT = 1000
+
+
 def naturals() -> Iterator[int]:
-    """0, 1, 2, ... と終わりなく続くジェネレータ。"""
+    """0, 1, 2, ... と続くジェネレータ。READ_LIMIT 個を超えて読まれたら失敗させる。"""
     n = 0
     while True:
+        if n >= READ_LIMIT:
+            pytest.fail(f"{READ_LIMIT} 個も読んだ。必要なぶんだけ読むこと")
         yield n
         n += 1
 
@@ -197,6 +204,8 @@ def test_first_errors_on_endless_log() -> None:
         n = 0
         while True:
             n += 1
+            if n > READ_LIMIT:
+                pytest.fail(f"{READ_LIMIT} 行も読んだ。3 件そろったら読むのをやめること")
             yield f"ERROR e{n}" if n % 2 == 0 else f"INFO i{n}"
 
     assert iters.first_errors(endless(), 3) == ["e2", "e4", "e6"]

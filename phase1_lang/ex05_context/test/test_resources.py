@@ -39,6 +39,19 @@ def test_transaction_can_be_used_repeatedly() -> None:
     assert settings == {"n": "2"}
 
 
+def test_transaction_object_can_be_reused_after_rollback() -> None:
+    settings = {"n": "0"}
+    transaction = Transaction(settings)
+    with pytest.raises(RuntimeError):
+        with transaction as draft:
+            draft["n"] = "bad"
+            raise RuntimeError("失敗")
+    # 捨てた変更は、次に入ったときの作業用の辞書に残っていない。
+    with transaction as draft:
+        assert draft == {"n": "0"}
+    assert settings == {"n": "0"}
+
+
 # --- temporary_attr ---
 
 

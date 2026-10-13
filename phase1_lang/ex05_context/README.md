@@ -22,7 +22,7 @@ except AppError:        # 残りをまとめて受ける
 低い層の例外（`ValueError` など）を、自分の例外に付け替えて出し直すときは、`raise 新しい例外 from 元の例外` と書きます。元の例外が `__cause__` に残り、トレースバックに両方が表示されます。`from` を付けないと、「例外の処理中に別の例外が起きた」という、事故のような表示になります。
 
 ### `with` 文
-C では、途中で失敗しても後片付けを通すために `goto cleanup;` を使いました。C++ はそれをデストラクタに任せました（RAII）。Python でこれにあたるのが `with` 文です。
+C では、途中で失敗しても後片付けを通すために、`goto cleanup;` のように後片付けのラベルへ飛ぶ書き方をします（c_master の5日目 ex01_blink では `goto out;`）。C++ はそれをデストラクタに任せました（RAII）。Python でこれにあたるのが `with` 文です。
 
 ```python
 with open(path) as f:      # 入るときに __enter__() が呼ばれ、その戻り値が f になる
@@ -55,7 +55,7 @@ with open(path) as f:      # 入るときに __enter__() が呼ばれ、その�
 - `temporary_attr` は、`getattr`、`setattr`、`try`／`finally` で書けます
 
 ## 発展課題（任意）
-- `get_int` の `from e` を外して `make test` し、失敗するテストとトレースバックの表示を見る
+- `get_int` の `from e` を外して、`make test` で落ちるテストと、`make lint` の指摘を見る。続けて対話環境で `get_int({"port": "x"}, "port")` を呼び、トレースバックの表示が `from e` のあるときとどう違うかを見る
 - 指定した種類の例外だけを握りつぶすコンテキストマネージャ `ignoring(*exc_types)` を、クラスで書く。標準の `contextlib.suppress` と比べる
 - `Transaction` を2つ入れ子にして、内側だけ失敗させる。どちらの変更が残るか
 

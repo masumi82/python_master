@@ -93,3 +93,16 @@ def test_handler_exception_propagates() -> None:
     # "add" のハンドラが出す ValueError は、握りつぶさずに呼び出し側へ伝える。
     with pytest.raises(ValueError):
         table.dispatch("add 1 x")
+
+
+def test_handler_key_error_is_not_mistaken_for_unknown_command() -> None:
+    table = CommandTable()
+
+    @table.command("get")
+    def get(args: list[str]) -> str:
+        return {"a": "1"}[args[0]]
+
+    assert table.dispatch("get a") == "1"
+    # ハンドラの中で出た KeyError を、「コマンドが表にない」と取り違えない。
+    with pytest.raises(KeyError):
+        table.dispatch("get b")

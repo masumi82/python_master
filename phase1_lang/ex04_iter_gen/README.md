@@ -58,7 +58,7 @@ C で `fgets` のループの中に解析と絞り込みを全部書いていた
 ## テストについて
 - `CountingLines` は、何行読まれたかを数えるイテレータです。`test_take_is_lazy` は、2個取るのに3行目まで読んでいたら落ちます
 - `test_chunked_yields_independent_lists` は、1つのリストを使い回して `clear()` していると落ちます（2日目の別名の話）
-- `test_first_errors_on_endless_log` は、終わりのないログを渡します。どこかでリストに全部ためていると、テストが終わりません
+- `test_first_errors_on_endless_log` は、終わりのないログを渡します。どこかでリストに全部ためていると、1000行を読んだところで「読みすぎ」として落ちます（上限がなければ、テストは終わらず、メモリを使い切ります）
 
 ## ヒント
 - `Countdown` は、`__iter__` で `self` を返し、`__next__` で値を返すか `raise StopIteration` します
@@ -67,7 +67,7 @@ C で `fgets` のループの中に解析と絞り込みを全部書いていた
 - `"ERROR disk full".split(maxsplit=1)` と `"ERROR".split(maxsplit=1)` を対話環境で試す
 
 ## 発展課題（任意）
-- `take` を `itertools.islice` で、`chunked` を `itertools.batched` で置き換える
+- `take` を `itertools.islice` で、`chunked` を `itertools.batched` で書き直してみる。どちらも、そのままでは仕様と少し違う（`batched` はタプルを返し、`islice` は負の個数を受け付けない）。何を足せばテストが通るか
 - `first_errors` を、ジェネレータ式 `(r.message for r in ...)` を使って書き直す
 - `sum(x * x for x in range(10**7))` と `sum([x * x for x in range(10**7)])` で、メモリの使い方がどう違うか
 
