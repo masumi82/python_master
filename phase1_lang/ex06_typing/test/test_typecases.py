@@ -41,7 +41,7 @@ def mypy_errors() -> dict[str, dict[int, str]]:
         check=False,
     )
     # 0 はエラーなし、1 は型エラーあり。それ以外は mypy 自体が動いていない。
-    assert result.returncode in (0, 1), result.stderr
+    assert result.returncode in (0, 1), result.stdout + result.stderr
     errors: dict[str, dict[int, str]] = {}
     for raw in result.stdout.splitlines():
         match = ERROR_LINE.match(raw)
@@ -82,4 +82,17 @@ def test_ng_case_is_rejected_only_on_marked_lines(
     case: Path, mypy_errors: dict[str, dict[int, str]]
 ) -> None:
     require_clean_module(mypy_errors)
-    assert set(mypy_errors.get(case.name, {})) == marked_lines(case)
+    errors = mypy_errors.get(case.name, {})
+    expected = marked_lines(case)
+    source = case.read_text(encoding="utf-8").splitlines()
+    report: list[str] = []
+    missed = sorted(expected - set(errors))
+    if missed:
+        report.append("「# NG」なのに、mypy がエラーにしなかった行（型ヒントが緩い）:")
+        report.extend(f"  {n} 行目: {source[n - 1]}" for n in missed)
+    unexpected = sorted(set(errors) - expected)
+    if unexpected:
+        report.append("「# NG」ではないのに、mypy がエラーにした行:")
+        report.extend(f"  {n} 行目: {errors[n]}" for n in unexpected)
+    if report:
+        pytest.fail("\n".join(report), pytrace=False)

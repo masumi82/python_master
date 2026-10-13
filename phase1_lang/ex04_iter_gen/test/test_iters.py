@@ -1,4 +1,5 @@
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
+from itertools import islice
 
 import pytest
 
@@ -37,16 +38,24 @@ def naturals() -> Iterator[int]:
         n += 1
 
 
+def first_few(items: Iterable[int], limit: int = 10) -> list[int]:
+    """items の先頭から最大 limit 個をリストにする。
+
+    list(items) と違い、終了の判定を間違えて終わらなくなったイテレータでも止まる。
+    """
+    return list(islice(items, limit))
+
+
 # --- Countdown ---
 
 
 def test_countdown() -> None:
-    assert list(iters.Countdown(3)) == [3, 2, 1]
+    assert first_few(iters.Countdown(3)) == [3, 2, 1]
 
 
 @pytest.mark.parametrize("start", [0, -2])
 def test_countdown_from_non_positive_is_empty(start: int) -> None:
-    assert list(iters.Countdown(start)) == []
+    assert first_few(iters.Countdown(start)) == []
 
 
 def test_countdown_is_its_own_iterator() -> None:
@@ -56,8 +65,8 @@ def test_countdown_is_its_own_iterator() -> None:
 
 def test_countdown_is_exhausted_after_one_pass() -> None:
     countdown = iters.Countdown(2)
-    assert list(countdown) == [2, 1]
-    assert list(countdown) == []
+    assert first_few(countdown) == [2, 1]
+    assert first_few(countdown) == []
 
 
 def test_countdown_next_by_hand() -> None:
@@ -94,6 +103,12 @@ def test_take_is_lazy() -> None:
 def test_take_zero_reads_nothing() -> None:
     lines = CountingLines(["a", "b"])
     assert list(iters.take(lines, 0)) == []
+    assert lines.consumed == 0
+
+
+def test_take_negative_reads_nothing() -> None:
+    lines = CountingLines(["a", "b"])
+    assert list(iters.take(lines, -1)) == []
     assert lines.consumed == 0
 
 
@@ -154,6 +169,8 @@ LOG = [
     "",
     "# comment",
     "ERROR disk full",
+    "   ",  # 空白だけの行も、空行として読み飛ばす
+    "  # indented comment",  # 字下げしたコメントも読み飛ばす
     "  WARN  low battery  ",
     "ERROR",
     "ERROR net down",

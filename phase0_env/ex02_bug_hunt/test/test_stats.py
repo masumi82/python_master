@@ -11,6 +11,13 @@ def test_collect_into_given_list() -> None:
     assert samples == [1.0, 2.0]
 
 
+def test_collect_into_given_empty_list() -> None:
+    # 空のリストを渡したときも、渡された「そのリスト」に加えて返す。
+    samples: list[float] = []
+    assert stats.collect(1.0, samples) is samples
+    assert samples == [1.0]
+
+
 def test_collect_starts_empty_a() -> None:
     assert stats.collect(1.0) == [1.0]
 

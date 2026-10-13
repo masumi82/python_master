@@ -77,6 +77,7 @@ python_master/
 | `make lint` | `ruff check src test` | コンパイラ警告 |
 | `make type` | `mypy src test`（strict） | コンパイラ警告 |
 | `make check` | lint、type に続けて、`python -X dev -X tracemalloc=5` と `pytest -W error` でテストを実行する | `make asan` |
+| `make repl` | その課題の `src/` を import できる対話環境を開く | なし |
 | `make clean` | キャッシュを削除する | `make clean` |
 
 課題の完了条件は `make check` が通ること。
@@ -154,10 +155,14 @@ Claude の記憶はディレクトリごとに分かれており、c_master 側�
 | `breakpoint()` が make 経由の pytest で pdb に入る | README の手順を `python -m pdb` に替える | 成立。`breakpoint()` を入れたスタブで `a`、`p v`、`q` が動いた |
 | テストから mypy を呼んで `typecases/` を検査できる | `make type` に `typecases/` 用の検査を足す | 成立。型をすべて `Any` で埋めた版は `make type` を通り、`ng_*.py` の3件で落ちる |
 
-実装中に足したものが2つある。
+実装中と、実装後のレビューで足したものがある。
 
 - `make check` の pytest に `-X tracemalloc=5` を付けた。付けないと、閉じ忘れの報告に「どこで開いたか」が出ず、学習者が `src/stats.py` の行を特定できない。
 - `pyproject.toml` に `[tool.pyright]` を置いた。型の検査は mypy のままで、これはエディタ向けの設定。Pyright はシステムの Python 3.10 を基準にするため、置かないと提供スタブの `def f[T]` が構文エラーと表示される。課題を足したら `extraPaths` に1行足す。
+- `make test` と `make check` に、メモリの上限（`ulimit -v`、4GB）を付けた。終了の判定を間違えたイテレータを `list()` に渡すと、リストが伸び続けて PC が固まる。試行では2分あまりで約16GB に達した。個々のテストにも読む数の上限を入れたが、見落としに備えて全体にも付ける。
+- `make repl` を足した。README が対話環境で `src/` の関数を呼ぶよう案内しているのに、import する方法がなかった。
+- common.mk で `unexport PYTHONPATH` を指定した。シェルに ROS などの `PYTHONPATH` があっても、道具に引き継がない。
+- 計画のあとで、誤った実装を通していたテストの穴をふさいだ。ex02_bug_hunt（`samples or []`）、ex02_closure_decorator（ハンドラの `KeyError` の取り違え、止まらない `retry`）、ex03_data_model（格納領域の共有）、ex04_iter_gen（負の個数、字下げされた空行とコメント、終わらない `Countdown`）、ex05_context（ロールバック後の再利用）、ex06_typing（一部だけ `Any` にした型ヒント）。
 
 ## 6. 範囲外
 

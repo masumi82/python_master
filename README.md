@@ -41,9 +41,10 @@ pyproject.toml   依存と、pytest・ruff・mypy の設定
 | `make lint` | ruff で、バグになりやすい書き方を調べる |
 | `make type` | `mypy --strict` で、型の矛盾を調べる |
 | `make check` | lint、type に続けて、警告をエラー扱いにしてテストを実行する。**これが通れば完了** |
+| `make repl` | 対話環境を開く。その課題の `src/` にあるモジュールを import できる |
 | `make clean` | キャッシュを削除する |
 
-対話環境で試したいときは、`../../.venv/bin/python` を起動します。
+`make test` と `make check` には、使えるメモリの上限（4GB）が付いています。終わらないループでリストが伸び続けても、PC が固まる前に `MemoryError` で止まります。
 
 ## 基本構文を確認したいとき
 c_master の [docs/基本構文/Python.md](https://github.com/masumi82/c_master/blob/master/docs/基本構文/Python.md) にまとめがあります（手元では `../c_master/docs/基本構文/Python.md`）。

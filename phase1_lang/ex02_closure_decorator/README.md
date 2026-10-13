@@ -79,9 +79,10 @@ def repeat[**P, R](n: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
 ## ヒント
 - 内側の関数にも型ヒントが要ります（`def counter() -> int:`）。書かないと `make type` が指摘します
 - `make_multipliers` を素直に書いてテストが `[30, 30, 30, 30]` になったら、読み物の注意の2つ目です。`make lint` も同じ場所を指摘します
+- 直し方は2つあります。関数を1つ作る関数に切り出すか、`def multiply(x: int, i: int = i) -> int:` のようにデフォルト引数でその時点の値を固定します。`lambda x, i=i: x * i` でも動きますが、mypy が型を推論できず `Cannot infer type of lambda` と言うので、`def` で書きます
 - `retry` は「最後の1回」をどう扱うかが要点です。mypy に「戻り値のない経路がある」と言われたら、ループの回数と、最後の呼び出しの置き場所を見直します
 - `CommandTable.command` が返すデコレータは、関数を包みません。表に載せて、受け取った関数をそのまま返します
-- `"  echo   a  ".split()` を対話環境で試す
+- `"  echo   a  ".split()` を対話環境（`make repl`）で試す
 
 ## 発展課題（任意）
 - `functools.wraps` を外すと、どのテストがどう落ちるか

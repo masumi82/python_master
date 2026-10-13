@@ -16,3 +16,4 @@ class Label:
 total_area([1, 2, 3])  # NG
 total_area([Line(1.0)])  # NG
 bad: Shape = Label()  # NG
+label: str = total_area([])  # NG

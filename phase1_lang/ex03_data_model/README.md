@@ -65,6 +65,7 @@ c_master の C++ 補足で書いたリングバッファを、Python の特殊�
 - `test_not_hashable` のために書くコードはありません。`__init__` を実装すれば通ります。`__eq__` を定義したクラスは、Python がハッシュ不可にするためです
 
 ## ヒント
+- 格納領域には型を書きます（`self._buf: list[object] = [None] * capacity`）。書かないと mypy は「`None` だけが入るリスト」と推論し、`push` の代入の行で `No overload variant of "__setitem__"` という分かりにくいエラーを出します
 - 要素の型が `object` なのは、「何でも入る」を型で表すためです。5日目に、要素の型を指定できる書き方を扱います
 - `from_iterable` の戻り値の型 `Self` は、「このクラス自身」を表します
 - `repr()` の出力には `f"{list(self)!r}"` が使えます。`!r` は `repr()` を通す指定です

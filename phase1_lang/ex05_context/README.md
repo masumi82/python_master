@@ -51,11 +51,12 @@ with open(path) as f:      # 入るときに __enter__() が呼ばれ、その�
 - `enumerate(text.splitlines(), start=1)` で、行番号と行を同時に取れます
 - `"url = http://x/?a=1".partition("=")` を対話環境で試す
 - `Transaction.__exit__` で「正常に終わったか」は `exc_type is None` で分かります
+- `__init__` で作業用の辞書を用意しておくなら、3日目と同じく型を書きます（`self._draft: dict[str, str] = {}`）
 - `target = draft` と書いても、呼び出し側の辞書は変わりません（2日目の名札の話）。`target` の中身を書き換えます
 - `temporary_attr` は、`getattr`、`setattr`、`try`／`finally` で書けます
 
 ## 発展課題（任意）
-- `get_int` の `from e` を外して、`make test` で落ちるテストと、`make lint` の指摘を見る。続けて対話環境で `get_int({"port": "x"}, "port")` を呼び、トレースバックの表示が `from e` のあるときとどう違うかを見る
+- `get_int` の `from e` を外して、`make test` で落ちるテストと、`make lint` の指摘を見る。続けて対話環境（`make repl`）で `from config import get_int` してから `get_int({"port": "x"}, "port")` を呼び、トレースバックの表示が `from e` のあるときとどう違うかを見る
 - 指定した種類の例外だけを握りつぶすコンテキストマネージャ `ignoring(*exc_types)` を、クラスで書く。標準の `contextlib.suppress` と比べる
 - `Transaction` を2つ入れ子にして、内側だけ失敗させる。どちらの変更が残るか
 

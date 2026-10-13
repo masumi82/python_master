@@ -103,6 +103,9 @@ def test_retry_reraises_last_error() -> None:
     @decorators.retry(2)
     def always_fails() -> None:
         attempts.append(len(attempts) + 1)
+        if len(attempts) > 10:
+            # 回数を数え忘れた retry が、止まらずに呼び直し続けるのを防ぐ。
+            pytest.fail("2 回までのはずが、10 回を超えて呼び直している")
         raise ValueError(f"失敗 {len(attempts)}")
 
     with pytest.raises(ValueError, match="失敗 2"):

@@ -13,7 +13,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "-q --tb=short"
+addopts = "--tb=short"
 
 [tool.mypy]
 strict = true

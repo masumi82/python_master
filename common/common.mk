@@ -9,6 +9,7 @@
 #   make lint             ruff で、バグになりやすい書き方を調べる
 #   make type             mypy --strict で、型の矛盾を調べる
 #   make check            lint、type に続けて、警告をエラー扱いにしてテストを実行する（完了条件）
+#   make repl             対話環境を開く（この課題の src/ のモジュールを import できる）
 #   make clean            キャッシュを削除する
 
 COMMON_DIR := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
@@ -17,11 +18,19 @@ PY         := $(ROOT)/.venv/bin/python
 CONFIG     := $(ROOT)/pyproject.toml
 ARGS       ?=
 
-.PHONY: test lint type check clean venv
+# シェルに PYTHONPATH が設定されていても（ROS など）、ここで動かす道具には引き継がない。
+unexport PYTHONPATH
+
+# テストが使えるメモリの上限（KB 単位。4GB）。終わらないループでリストが伸び続けても、
+# PC が固まる前に MemoryError で止まる。ulimit -v が使えない環境では、上限なしで動く。
+MEM_LIMIT_KB := 4194304
+LIMIT        := ulimit -v $(MEM_LIMIT_KB) 2>/dev/null || true;
+
+.PHONY: test lint type check repl clean venv
 
 # PYTHONPATH=src は、テストが src/ のモジュールを import できるようにするため。
 test: venv
-	PYTHONPATH=src $(PY) -m pytest -c $(CONFIG) test $(ARGS)
+	$(LIMIT) PYTHONPATH=src $(PY) -m pytest -c $(CONFIG) test $(ARGS)
 
 lint: venv
 	$(PY) -m ruff check --config $(CONFIG) src test
@@ -33,7 +42,11 @@ type: venv
 # -X dev は Python の開発モードで、実行時の検査を増やす。
 # -X tracemalloc=5 は、警告の原因になったオブジェクトを「どこで作ったか」まで表示させる。
 check: lint type
-	PYTHONPATH=src $(PY) -X dev -X tracemalloc=5 -m pytest -c $(CONFIG) -W error test $(ARGS)
+	$(LIMIT) PYTHONPATH=src $(PY) -X dev -X tracemalloc=5 -m pytest -c $(CONFIG) -W error test $(ARGS)
+
+# 対話環境。import clamp のように、この課題の src/ のモジュールを読み込める。
+repl: venv
+	PYTHONPATH=src $(PY)
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache
