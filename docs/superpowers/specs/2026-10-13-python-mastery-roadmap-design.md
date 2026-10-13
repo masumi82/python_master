@@ -76,7 +76,7 @@ python_master/
 | `make test` | pytest を実行する。実装中の速い確認用。`ARGS="-k 名前"` で pytest にオプションを渡せる | `make test` |
 | `make lint` | `ruff check src test` | コンパイラ警告 |
 | `make type` | `mypy src test`（strict） | コンパイラ警告 |
-| `make check` | lint、type に続けて、`python -X dev -W error` で pytest を実行する | `make asan` |
+| `make check` | lint、type に続けて、`python -X dev -X tracemalloc=5` と `pytest -W error` でテストを実行する | `make asan` |
 | `make clean` | キャッシュを削除する | `make clean` |
 
 課題の完了条件は `make check` が通ること。
@@ -141,18 +141,23 @@ Claude の記憶はディレクトリごとに分かれており、c_master 側�
 - ex02_bug_hunt は、3つのバグがそれぞれ想定した道具（`make lint`、`make type`、`make check`）で指摘されることを個別に確かめる。
 - 日本語の文書（README、ROADMAP、解説、速習）は deslop-ja の `check.py` にかける。
 
-## 5. 未検証の前提
+## 5. 設計時に未検証だった前提と、その結果
 
-次の点は設計時に実行して確かめていない。実装計画の最初のタスクで確かめ、成り立たなければ右の代替に切り替える。
+次の点は設計時に実行して確かめていなかった。実装時（2026-10-13）に確かめた結果を右の列に書く。6つとも成り立ち、代替には切り替えていない。
 
-| 前提 | 成り立たない場合 |
-|---|---|
-| `uv sync` で 3.13 の `.venv` に pytest・ruff・mypy が入る | Python を 3.11 に下げる（uv で 3.11 の仮想環境が作れることは確認済み） |
-| common.mk が渡した `pyproject.toml` の設定（strict、ruff のルール）が、課題ディレクトリでの実行に効く | 渡し方（`-c`、`--config`、`--config-file`）を直す |
-| 閉じ忘れたファイルが、`-X dev -W error` を付けた pytest で失敗になる | 3つ目のバグを、テストだけが見つける別のバグに替える |
-| 日本語コメントの全角文字が、選んだ ruff のルールに触れない | 触れるルールを個別に外す |
-| `breakpoint()` が make 経由の pytest で pdb に入る | README の手順を `python -m pdb` に替える |
-| テストから mypy を呼んで `typecases/` を検査できる | `make type` に `typecases/` 用の検査を足す |
+| 前提 | 成り立たない場合 | 結果 |
+|---|---|---|
+| `uv sync` で 3.13 の `.venv` に pytest・ruff・mypy が入る | Python を 3.11 に下げる | 成立。Python 3.13.12、pytest 9.1.1、ruff 0.17.0、mypy 2.4.0 |
+| common.mk が渡した `pyproject.toml` の設定（strict、ruff のルール）が、課題ディレクトリでの実行に効く | 渡し方（`-c`、`--config`、`--config-file`）を直す | 成立。一時コピーに型なしの関数と可変のデフォルト引数を足すと、`make type` が `no-untyped-def`、`make lint` が `B006` を出した |
+| 閉じ忘れたファイルが、`-X dev -W error` を付けた pytest で失敗になる | 3つ目のバグを、テストだけが見つける別のバグに替える | 成立。1つ目と2つ目だけを直した版は `make test` が 7 passed、`make check` が `ResourceWarning: unclosed file` で 1 failed。失敗に変えているのは pytest の `-W error` で、`-X dev` だけでは警告の表示にとどまる |
+| 日本語コメントの全角文字が、選んだ ruff のルールに触れない | 触れるルールを個別に外す | 成立。全課題のスタブとテストで `make lint` が通る |
+| `breakpoint()` が make 経由の pytest で pdb に入る | README の手順を `python -m pdb` に替える | 成立。`breakpoint()` を入れたスタブで `a`、`p v`、`q` が動いた |
+| テストから mypy を呼んで `typecases/` を検査できる | `make type` に `typecases/` 用の検査を足す | 成立。型をすべて `Any` で埋めた版は `make type` を通り、`ng_*.py` の3件で落ちる |
+
+実装中に足したものが2つある。
+
+- `make check` の pytest に `-X tracemalloc=5` を付けた。付けないと、閉じ忘れの報告に「どこで開いたか」が出ず、学習者が `src/stats.py` の行を特定できない。
+- `pyproject.toml` に `[tool.pyright]` を置いた。型の検査は mypy のままで、これはエディタ向けの設定。Pyright はシステムの Python 3.10 を基準にするため、置かないと提供スタブの `def f[T]` が構文エラーと表示される。課題を足したら `extraPaths` に1行足す。
 
 ## 6. 範囲外
 
