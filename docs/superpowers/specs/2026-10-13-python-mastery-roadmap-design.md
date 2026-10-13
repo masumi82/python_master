@@ -67,13 +67,13 @@ python_master/
 - Python は 3.13 に固定し、uv に管理させる。システムの 3.10 は使わない（2026年10月でサポートが切れる）。
 - 依存は pytest、ruff、mypy の3つ。`pyproject.toml` の dev グループに書き、`uv sync` でリポジトリ内の `.venv` に入れる。学習者の PATH にあるツールには依存しない。
 - 型チェッカは mypy だけにする。pip で `.venv` に入り、Node が要らない。
-- ツールの設定はリポジトリ直下の `pyproject.toml` に集める。mypy は `strict = true`。ruff は `E`・`F`・`W`・`B`・`UP`・`SIM` を選ぶ。
+- ツールの設定はリポジトリ直下の `pyproject.toml` に集める。common.mk が、このファイルのパスを各ツールに明示して渡す。mypy は `strict = true`。ruff は `E`・`F`・`W`・`B`・`UP` を選び、`E501`（行の長さ）は外す。`SIM` は選ばない。`SIM115` が閉じ忘れたファイルを指摘するので、ex02_bug_hunt の3つ目のバグまで ruff が見つけてしまう。
 - 課題の Makefile は `include ../../common/common.mk` だけにする。`src/` を import できるようにする設定（`PYTHONPATH=src`）は common.mk に書き、課題ごとの `conftest.py` は置かない。
 - `.venv` がない状態で make を実行したら、`uv sync` を促すメッセージを出して止まる。
 
 | コマンド | 内容 | c_master での対応 |
 |---|---|---|
-| `make test` | pytest を実行する。実装中の速い確認用 | `make test` |
+| `make test` | pytest を実行する。実装中の速い確認用。`ARGS="-k 名前"` で pytest にオプションを渡せる | `make test` |
 | `make lint` | `ruff check src test` | コンパイラ警告 |
 | `make type` | `mypy src test`（strict） | コンパイラ警告 |
 | `make check` | lint、type に続けて、`python -X dev -W error` で pytest を実行する | `make asan` |
@@ -83,7 +83,7 @@ python_master/
 
 ### 3.2 課題の形式
 
-- README: 読み物（C との対比。10〜20分）/ 目的 / 手順 / ヒント / 発展課題（任意）/ 説明できるようになるべきこと
+- README: 読み物（C との対比。10〜20分）/ 目的 / 手順 / ヒント / 発展課題（任意）/ 説明できるようになるべきこと。ex02_bug_hunt は自分で踏んで気づく課題なので、読み物とヒントを置かない
 - src: シグネチャと docstring だけのスタブ。本体は `raise NotImplementedError`。初期状態では、テストの収集は通り、テストは失敗する。
 - test: 正常系・境界値・異常系を含む pytest のテスト。型ヒント付き（`-> None`）。
 - 課題コードと解答のコメントは日本語で書く。識別子は英語。
@@ -104,11 +104,11 @@ Phase 0（1日目）
 Phase 1（2〜5日目）
 
 - ex01_names_objects（2日目）: 予想クイズ8問と実装。クイズは c_master の ex03_int_promotion と同じ形式で、`src/answers.py` に予想を書き、テストが実際に式を評価して照合する。題材は別名、`+=` と `+` の違い、`[[0] * n] * m`、浅いコピー、デフォルト引数、タプルの中のリスト、`==` と `is`。実装は `make_grid`、元を変えずに追加する関数、`deep_copy`（`copy` モジュールを使わない）、内部状態を外へ漏らさない `History` クラス。
-- ex02_closure_decorator（2日目）: `src/decorators.py` に `make_counter`（`nonlocal`）、`make_multipliers`（ループ変数の遅延束縛）、`count_calls`、引数付きの `retry(times)`。デコレータは `functools.wraps` で元の関数名を保つ。`src/commands.py` に `CommandTable`。`@table.command("name")` でハンドラを登録し、`dispatch(line)` で振り分ける（c_master の ex04_cmd_table と同じ題材）。
+- ex02_closure_decorator（2日目）: `src/decorators.py` に `make_counter`（`nonlocal`）、`make_multipliers`（ループ変数の遅延束縛）、呼ばれた関数名をモジュールのリスト `CALL_LOG` に記録する `traced`、引数付きの `retry(times)`。デコレータは `functools.wraps` で元の関数名を保つ。呼び出し回数を関数の属性に持たせるデコレータ（`count_calls`）は採らない。`mypy --strict` を通すのが難しく、2日目の学習者には型との格闘になる。`src/commands.py` に `CommandTable`。`@table.command("name")` でハンドラを登録し、`dispatch(line)` で振り分ける（c_master の ex04_cmd_table と同じ題材）。
 - ex03_data_model（3日目）: `src/ring_buffer.py` の `RingBuffer`（c_master の C++ 補足と同じ題材）。`__len__`、`__iter__`、`__getitem__`（負の添字を含む）、`__repr__`、`__eq__`、読み取り専用の `capacity` プロパティ、`is_full` プロパティ、クラスメソッド `from_iterable`。満杯での `push` は提供する `BufferFullError`、空での `pop` は `IndexError`。インスタンス同士が格納領域を共有しないことをテストで確かめる（クラス属性とインスタンス属性の取り違え）。`collections.deque` は使わない。要素の型は `object` にしておき、ex06 でジェネリクスに進む。
 - ex04_iter_gen（4日目）: `src/iters.py`。`__iter__` と `__next__` を手で書く `Countdown`、ジェネレータ関数の `take`、`chunked`、`flatten`（`yield from`）、ログ行を `LogRecord` に変換する `parse` と、それらをつないだ遅延パイプライン。テストは「何行読まれたか」を数えるイテレータを渡し、必要なぶんしか消費しないことを確かめる。
-- ex05_context（4日目）: `src/config.py` に例外の階層（`ConfigError`、`MissingKeyError`、`InvalidValueError`）、`parse_config`、`get_int`（`raise ... from` で原因を残す）。`src/resources.py` に `__enter__` と `__exit__` を書く `Transaction`（例外が出たら変更を捨て、例外は握りつぶさない）と、`@contextmanager` で書く `temporary_attr`。
-- ex06_typing（5日目）: `src/typed.py`。ジェネリックな `first` と `Stack[T]`、`Protocol` の `Shape` と `total_area`、`None` を返しうる関数の絞り込み。型の正しさは `typecases/` で確かめる。`ok_*.py` は mypy を通り、`ng_*.py`（`Stack[int]` に文字列を積むなど）は mypy がエラーにする。テストが mypy を呼んでこれを検査するので、`Any` で埋めると通らない。`typecases/` は `src/` と `test/` の外に置き、`make lint` と `make type` の対象から外す。
+- ex05_context（4日目）: `src/config.py` に例外の階層（親の `ConfigError` は提供し、子の `MissingKeyError` と `InvalidValueError` を学習者が定義する）、`parse_config`、`get_int`（`raise ... from` で原因を残す）。`src/resources.py` に `__enter__` と `__exit__` を書く `Transaction`（例外が出たら変更を捨て、例外は握りつぶさない）と、`@contextmanager` で書く `temporary_attr`。
+- ex06_typing（5日目）: `src/typed.py`。本体は動く状態で提供し、型ヒントだけを書いていない。学習者は、ジェネリックな `first` と `Stack[T]`、`Protocol` の `Shape` と `total_area`、`None` を返しうる `find_user` に型を書く。型を書くと mypy が見つけるバグ（`None` の検査漏れ）を1つ入れておく。型の正しさは `typecases/` で確かめる。`ok_*.py` は mypy を通り、`ng_*.py`（`Stack[int]` に文字列を積むなど）は mypy がエラーにする。テストが mypy を呼んでこれを検査するので、`Any` で埋めると通らない。`typecases/` は `src/` と `test/` の外に置き、`make lint` と `make type` の対象から外す。
 
 ### 3.4 answers/（ローカル専用）
 
@@ -132,7 +132,7 @@ Claude の記憶はディレクトリごとに分かれており、c_master 側�
 
 - `docs/基本構文/Python.md` は複製しない。README から c_master のものへリンクする。
 - `git init` まで行う。GitHub への公開とプッシュはしない。
-- `.gitignore` は c_master のものに `.pytest_cache/`、`.ruff_cache/`、`.mypy_cache/` を足す。
+- `.gitignore` は c_master のものから C のビルド成果物を除き、`.pytest_cache/`、`.ruff_cache/`、`.mypy_cache/`、`*.pyc` を足す。秘密情報まわり（`.env`、`*.pem`、`*.key` など）はそのまま引き継ぐ。
 
 ## 4. 検証方法
 
@@ -148,7 +148,7 @@ Claude の記憶はディレクトリごとに分かれており、c_master 側�
 | 前提 | 成り立たない場合 |
 |---|---|
 | `uv sync` で 3.13 の `.venv` に pytest・ruff・mypy が入る | Python を 3.11 に下げる（uv で 3.11 の仮想環境が作れることは確認済み） |
-| 課題ディレクトリから実行した pytest・ruff・mypy が、リポジトリ直下の `pyproject.toml` を読む | common.mk で設定ファイルのパスを明示して渡す |
+| common.mk が渡した `pyproject.toml` の設定（strict、ruff のルール）が、課題ディレクトリでの実行に効く | 渡し方（`-c`、`--config`、`--config-file`）を直す |
 | 閉じ忘れたファイルが、`-X dev -W error` を付けた pytest で失敗になる | 3つ目のバグを、テストだけが見つける別のバグに替える |
 | 日本語コメントの全角文字が、選んだ ruff のルールに触れない | 触れるルールを個別に外す |
 | `breakpoint()` が make 経由の pytest で pdb に入る | README の手順を `python -m pdb` に替える |
