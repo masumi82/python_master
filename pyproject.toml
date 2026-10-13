@@ -26,3 +26,22 @@ target-version = "py313"
 # E/W: 書式、F: 未使用や未定義、B: バグになりやすい書き方、UP: 古い書き方
 select = ["E", "F", "W", "B", "UP"]
 ignore = ["E501"]
+
+# エディタ（Pylance / Pyright）向けの設定。型の検査そのものは mypy（make type）で行う。
+# これがないと、エディタがシステムの古い Python を基準にして、スタブの def f[T] を
+# 構文エラーと表示する。extraPaths は、テストから src/ のモジュールを解決させるため。
+[tool.pyright]
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+extraPaths = [
+    "phase0_env/ex01_toolchain/src",
+    "phase0_env/ex02_bug_hunt/src",
+    "phase1_lang/ex01_names_objects/src",
+    "phase1_lang/ex02_closure_decorator/src",
+    "phase1_lang/ex03_data_model/src",
+    "phase1_lang/ex04_iter_gen/src",
+    "phase1_lang/ex05_context/src",
+    "phase1_lang/ex06_typing/src",
+]
+exclude = [".venv", "answers", "phase1_lang/ex06_typing/typecases"]
